@@ -3,9 +3,7 @@
 Helltaker (Linux) code patch: disable the "dec eax" that decrements the
 value stored at [r15+0x154], by overwriting it with two NOPs.
 
-This has to re-find the instruction every launch because Mono JIT-compiles
-the method fresh into a new memory address each run - there's nothing
-fixed in the .exe file to edit once and for all.
+DUH ITS AI GENERATED I DONT PLAY THE GAME
 
 Requires root:
     sudo python3 helltaker_nop_patch.py
@@ -96,8 +94,12 @@ def patch_bytes(pid, addr, new_bytes):
 
 def banner():
     print(r"""
-Ultimate Health Hell-Taker Patch
-By - amdelulu""")
+   _  _     _ _ _        _
+  | || |___| | | |_ __ _| |_____ _ _
+  | __ / -_) | |  _/ _` | / / -_) '_|
+  |_||_\___|_|_|\__\__,_|_\_\___|_|
+        NOP PATCHER - amdelulu
+""")
 
 
 def main():
@@ -116,7 +118,7 @@ def main():
         sys.exit(1)
 
     patched = 0
-    with open(f"/proc/{pid}/mem", "rb") as mem:
+    with open(f"/proc/{pid}/mem", "rb", buffering=0) as mem:
         for mov_addr in mov_hits:
             dec_addr = mov_addr - 2
             mem.seek(dec_addr)
@@ -127,8 +129,12 @@ def main():
                 print(f"    before : {hexdump(full_before)}")
                 patch_bytes(pid, dec_addr, NOP_NOP)
 
-                mem.seek(dec_addr)
-                full_after = mem.read(2 + len(MOV_PATTERN))
+                # re-open fresh (don't reuse the buffered `mem` handle above -
+                # it can silently serve cached, pre-patch bytes instead of
+                # re-reading the now-modified memory)
+                with open(f"/proc/{pid}/mem", "rb", buffering=0) as fresh:
+                    fresh.seek(dec_addr)
+                    full_after = fresh.read(2 + len(MOV_PATTERN))
                 print(f"    after  : {hexdump(full_after)}")
                 patched += 1
 
